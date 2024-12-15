@@ -1,10 +1,10 @@
 interface NotionItem {
   properties: {
-    Submitter: { title: [{ plain_text: string }] }
+    submitter: { title: [{ plain_text: string }] }
     Status: { status: { name: string } }
-    Country: { select: { name: string } }
-    Activity: { select: { name: string } }
-    Comment: { rich_text: [{ plain_text: string }] }
+    country: { select: { name: string } }
+    activity: { select: { name: string } }
+    comment: { rich_text: [{ plain_text: string }] }
   }
 }
 
@@ -30,11 +30,11 @@ export async function notionApi(endpoint: string, body: any) {
 
 function tripItemMapper(item: NotionItem): TripItem {
   return {
-    submitter: item.properties.Submitter.title[0].plain_text,
+    submitter: item.properties.submitter.title[0].plain_text,
     status: item.properties.Status.status.name,
-    country: item.properties.Country.select.name,
-    activity: item.properties.Activity.select.name,
-    comment: item.properties.Comment.rich_text[0].plain_text,
+    country: item.properties.country.select.name,
+    activity: item.properties.activity.select.name,
+    comment: item.properties.comment.rich_text[0].plain_text,
   }
 }
 

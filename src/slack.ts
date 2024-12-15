@@ -142,7 +142,7 @@ async function handleActivity(payload: SlackModalPayload) {
       }
       await saveTripItem(fields)
       await slackApi('chat.postMessage', {
-        channel: 'C085J3UL7FB',
+        channel: process.env.SLACK_CHANNEL_ID,
         text: `Whoa! <@${payload.user.id}> has voted for our trip! ${values.trip_activity_block.trip_activity.selected_option.text.text}`,
       })
       break
