@@ -23,4 +23,4 @@ const postNewItemsToSlack: Handler = async () => {
   })
 }
 
-export const handler = schedule('*/5 * * * *', postNewItemsToSlack)
+export const handler = schedule('0 14 */3 * *', postNewItemsToSlack)
