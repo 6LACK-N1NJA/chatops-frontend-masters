@@ -1,6 +1,6 @@
 interface NotionItem {
   properties: {
-    submitter: { rich_text: [{ plain_text: string }] }Ç
+    submitter: { rich_text: [{ plain_text: string }] }
     Status: { status: { name: string } }
     country: { select: { name: string } }
     activity: { select: { name: string } }
