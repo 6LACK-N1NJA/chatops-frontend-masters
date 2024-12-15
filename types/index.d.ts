@@ -247,3 +247,10 @@ type NewItem = {
   status?: string
   submitter?: string
 }
+type TripItem = {
+  submitter?: string
+  status?: string
+  country: string
+  activity: string
+  comment?: string
+}

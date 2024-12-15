@@ -1,8 +1,7 @@
 import type { Handler } from '@netlify/functions'
 import { parse } from 'querystring'
 import { blocks, modal, slackApi, verifySlackRequst } from './util/slack'
-import { channel } from 'diagnostics_channel'
-import { text } from 'stream/consumers'
+import { saveTripItem } from './util/notion'
 
 interface Movie {
   Response: string
@@ -136,13 +135,15 @@ async function handleActivity(payload: SlackModalPayload) {
     case 'trip_modal':
       const { values } = payload.view.state
       const fields = {
-        country: values.trip_country_block.trip_country.selected_option,
-        activity: values.trip_activity_block.trip_activity.selected_option,
+        country: values.trip_country_block.trip_country.selected_option.value,
+        activity: values.trip_activity_block.trip_activity.selected_option.value,
         comment: values.trip_comment_block.trip_comment.value,
+        submitter: payload.user.username,
       }
+      await saveTripItem(fields)
       await slackApi('chat.postMessage', {
         channel: 'C085J3UL7FB',
-        text: `Whoa! <@${payload.user.id}> has voted for our trip! ${fields.activity.text.text}`,
+        text: `Whoa! <@${payload.user.id}> has voted for our trip! ${values.trip_activity_block.trip_activity.selected_option.text.text}`,
       })
       break
     case 'request-watch':
