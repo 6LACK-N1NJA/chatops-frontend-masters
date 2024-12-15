@@ -27,6 +27,7 @@ const COUNTRY_OPTIONS = [
   'Malta',
   'Tunis',
   'Portugal',
+  'Croatia',
 ].map(createCountryOption)
 
 const ACTIVITY_OPTIONS = [
