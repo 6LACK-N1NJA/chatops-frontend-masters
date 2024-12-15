@@ -53,7 +53,7 @@ export const blocks = {
     },
     element: {
       action_id: id,
-      type: 'plaint_text_input',
+      type: 'plain_text_input',
       placeholder: {
         type: 'plain_text',
         text: placeholder,
@@ -116,6 +116,11 @@ export function modal({
       submit: {
         type: 'plain_text',
         text: submit_text,
+      },
+      close: {
+        type: 'plain_text',
+        text: 'Cancel',
+        emoji: true,
       },
       blocks,
     },
