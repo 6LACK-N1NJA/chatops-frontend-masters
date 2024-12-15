@@ -4,6 +4,40 @@ import { blocks, modal, slackApi, verifySlackRequst } from './util/slack'
 import { channel } from 'diagnostics_channel'
 import { text } from 'stream/consumers'
 
+interface Movie {
+  Response: string
+  Title: string
+  Year: string
+  Plot: string
+}
+
+interface SlackCommandHandlers {
+  [key: string]: (payload: any) => Promise<any>
+}
+
+const OMDB_API_BASE_URL = 'http://www.omdbapi.com'
+const COUNTRY_OPTIONS = [
+  'Spain',
+  'Tailand',
+  'Montenegro',
+  'Morocco',
+  'Italy',
+  'Greece',
+  'Turkey',
+  'Malta',
+  'Tunis',
+  'Portugal',
+].map(createCountryOption)
+
+const ACTIVITY_OPTIONS = [
+  { label: 'Lay on a beach', value: 'beach' },
+  { label: 'Surfing, diving, etc.', value: 'extreme' },
+  { label: 'Take a road and and see everything', value: 'road' },
+  { label: 'Into the wild', value: 'hiking' },
+  { label: 'Sex, drugs and rock-n-roll', value: 'hardore' },
+  { label: 'Food, wine and nothing else', value: 'food' },
+]
+
 function createCountryOption(country: string): {
   value: string
   label: string
@@ -11,90 +45,87 @@ function createCountryOption(country: string): {
   return { value: country, label: country }
 }
 
-async function handleSlashCommand(payload: SlackSlashCommandPayload) {
-  const { command, channel_id, text } = payload
-  let res
-  switch (command) {
-    case '/watch':
-      const movie = await (
-        await fetch(
-          `http://www.omdbapi.com/?apikey=${process.env.OMDB_API_KEY}&t=${text}`
-        )
-      ).json()
-      let message: string
-      if (movie.Response === 'False') {
-        message = 'There is no such a movie found'
-      } else {
-        message = `${movie.Title} - ${movie.Year}
-${movie.Plot}`
-      }
-      res = await slackApi('chat.postMessage', {
-        channel: channel_id,
-        text: message,
-      })
-      if (!res.ok) {
-        console.log('ERROR', res)
-      }
-      break
-    case '/teamtrip':
-      const mod = modal({
-        id: 'trip_modal',
-        title: 'Select the trip',
-        trigger_id: payload.trigger_id,
-        submit_text: 'Vote',
-        blocks: [
-          blocks.section({
-            text: "*The next team trip is comming!* Choose our destiny and how we'll have fun.",
-          }),
-          blocks.select({
-            id: 'trip_country',
-            label: 'Pick a country',
-            placeholder: 'Narnia',
-            options: [
-              createCountryOption('Spain'),
-              createCountryOption('Tailand'),
-              createCountryOption('Montenegro'),
-              createCountryOption('Morocco'),
-              createCountryOption('Italy'),
-              createCountryOption('Greece'),
-              createCountryOption('Turkey'),
-              createCountryOption('Malta'),
-              createCountryOption('Tunis'),
-              createCountryOption('Portugal'),
-            ],
-          }),
-          blocks.select({
-            id: 'trip_activity',
-            label: 'Pick an activity',
-            placeholder: 'Kill zombies',
-            options: [
-              { label: 'Lay on a beach', value: 'beach' },
-              { label: 'Surfing, diving, etc.', value: 'extreme' },
-              { label: 'Take a road and and see everything', value: 'road' },
-              { label: 'Into the wild', value: 'hiking' },
-              { label: 'Sex, drugs and rock-n-roll', value: 'hardore' },
-              { label: 'Food, wine and nothing else', value: 'food' },
-            ],
-          }),
-          blocks.input({
-            id: 'trip_comment',
-            label: 'Comments and wiches',
-            placeholder: 'Give me a glock',
-            hint: 'What do you prefer?',
-          }),
-        ],
-      })
-      res = await slackApi('views.open', mod)
-      break
-    default:
-      return {
-        statusCode: 200,
-        body: `Unknown command: ${command}`,
-      }
+async function fetchMovie(title: string): Promise<Movie> {
+  const response = await fetch(
+    `${OMDB_API_BASE_URL}/?apikey=${process.env.OMDB_API_KEY}&t=${title}`
+  )
+  return response.json()
+}
+
+async function handleWatchCommand(payload: any) {
+  const movie = await fetchMovie(payload.text)
+  const message =
+    movie.Response === 'False'
+      ? 'There is no such a movie found'
+      : `${movie.Title} - ${movie.Year}\n${movie.Plot}`
+
+  const res = await slackApi('chat.postMessage', {
+    channel: payload.channel_id,
+    text: message,
+  })
+
+  if (!res.ok) {
+    console.log('ERROR', res)
   }
+  return res
+}
+
+async function handleTeamTripCommand(payload: any) {
+  const tripModal = createTripModal(payload.trigger_id)
+  return await slackApi('views.open', tripModal)
+}
+
+function createTripModal(triggerId: string) {
+  return modal({
+    id: 'trip_modal',
+    title: 'Select the trip',
+    trigger_id: triggerId,
+    submit_text: 'Vote',
+    blocks: [
+      blocks.section({
+        text: "*The next team trip is comming!* Choose our destiny and how we'll have fun.",
+      }),
+      blocks.select({
+        id: 'trip_country',
+        label: 'Pick a country',
+        placeholder: 'Narnia',
+        options: COUNTRY_OPTIONS,
+      }),
+      blocks.select({
+        id: 'trip_activity',
+        label: 'Pick an activity',
+        placeholder: 'Kill zombies',
+        options: ACTIVITY_OPTIONS,
+      }),
+      blocks.input({
+        id: 'trip_comment',
+        label: 'Comments and wiches',
+        placeholder: 'Give me a glock',
+        hint: 'What do you prefer?',
+      }),
+    ],
+  })
+}
+
+const commandHandlers: SlackCommandHandlers = {
+  '/watch': handleWatchCommand,
+  '/teamtrip': handleTeamTripCommand,
+}
+
+async function handleCommand(command: string, payload: any) {
+  const handler = commandHandlers[command]
+
+  if (!handler) {
+    return {
+      statusCode: 200,
+      body: `Unknown command: ${command}`,
+    }
+  }
+
+  await handler(payload)
   return {
     statusCode: 200,
-    body: '',
+    body: ''
   }
 }
 
@@ -115,11 +146,11 @@ async function handleActivity(payload: SlackModalPayload) {
       break
     case 'request-watch':
       const { channel, user, message } = payload
-	  await slackApi('chat.postMessage', {
-		channel: channel?.id,
-		thread_ts: message.thread_ts ?? message.ts,
-		text: `Hey <@${user.id}>, run /watch to find a movie in the main channel`
-	  })
+      await slackApi('chat.postMessage', {
+        channel: channel?.id,
+        thread_ts: message.thread_ts ?? message.ts,
+        text: `Hey <@${user.id}>, run /watch to find a movie in the main channel`,
+      })
       break
     default:
       console.log(`Unknown callback id ${callback_id}`)
@@ -146,7 +177,7 @@ export const handler: Handler = async (event) => {
 
   const body = parse(event.body ?? '') as SlackPayload
 
-  if (body.command) return handleSlashCommand(body as SlackSlashCommandPayload)
+  if (body.command) return handleCommand(body.command, body)
 
   if (body.payload) return handleActivity(JSON.parse(body.payload))
 
