@@ -1,6 +1,6 @@
 interface NotionItem {
   properties: {
-    submitter: { title: [{ plain_text: string }] }
+    submitter: { rich_text: [{ plain_text: string }] }Ç
     Status: { status: { name: string } }
     country: { select: { name: string } }
     activity: { select: { name: string } }
@@ -30,7 +30,7 @@ export async function notionApi(endpoint: string, body: any) {
 
 function tripItemMapper(item: NotionItem): TripItem {
   return {
-    submitter: item.properties.submitter.title[0].plain_text,
+    submitter: item.properties.submitter.rich_text[0].plain_text,
     status: item.properties.Status.status.name,
     country: item.properties.country.select.name,
     activity: item.properties.activity.select.name,

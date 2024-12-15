@@ -98,13 +98,13 @@ type FoodOpinionModalState = {
 type TeamTripModalState = {
   values: {
     trip_comment_block: {
-		trip_comment: {
+      trip_comment: {
         type: 'plain_text_input'
         value: string
       }
     }
     trip_country_block: {
-		trip_country: {
+      trip_country: {
         type: 'static_select'
         selected_option: {
           text: {
@@ -117,7 +117,7 @@ type TeamTripModalState = {
       }
     }
     trip_activity_block: {
-		trip_activity: {
+      trip_activity: {
         type: 'static_select'
         selected_option: {
           text: {

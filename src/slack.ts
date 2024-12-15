@@ -125,7 +125,7 @@ async function handleCommand(command: string, payload: any) {
   await handler(payload)
   return {
     statusCode: 200,
-    body: ''
+    body: '',
   }
 }
 
@@ -136,7 +136,8 @@ async function handleActivity(payload: SlackModalPayload) {
       const { values } = payload.view.state
       const fields = {
         country: values.trip_country_block.trip_country.selected_option.value,
-        activity: values.trip_activity_block.trip_activity.selected_option.value,
+        activity:
+          values.trip_activity_block.trip_activity.selected_option.value,
         comment: values.trip_comment_block.trip_comment.value,
         submitter: payload.user.username,
       }

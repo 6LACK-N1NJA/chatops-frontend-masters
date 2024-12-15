@@ -5,8 +5,6 @@ import { slackApi, blocks } from './util/slack'
 const postNewItemsToSlack: Handler = async () => {
   const items = await getNewItems()
 
-  console.log(items)
-
   await slackApi('chat.postMessage', {
     channel: process.env.SLACK_CHANNEL_ID,
     blocks: [
